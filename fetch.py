@@ -49,8 +49,8 @@ date_str = str(datetime.now(ZoneInfo("Asia/Jakarta")).date())
 account_id_list = [x for x in iter_current_registered_account_ids_without_profiles(date_str)]
 print(f"Total:", len(account_id_list))
 
-for account_id in tqdm(account_id_list):
-    print(f"Processing {account_id} ....")
+for account_id in (pbar := tqdm(account_id_list)):
+    pbar.set_description(f"Processing {account_id}")
     profile = fetch_profile_from_gdbrowser_colon(account_id)
 
     get = lambda kp: get_and_warn_if_not_exists(profile, kp)
