@@ -220,7 +220,4 @@ for account_id in (pbar := tqdm(account_id_list)):
         .execute()
     )
 
-    print("Warning: early break for testing")
-    break
-
 print("Done!")
