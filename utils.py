@@ -1,10 +1,9 @@
 import json
 import os
 
+from dotenv import load_dotenv
 import requests
 from supabase import Client, create_client
-
-from dotenv import load_dotenv
 
 def create_supabase_client():
     load_dotenv()
@@ -255,3 +254,203 @@ def insert_profile_into_supabase(date_str, profile):
         })
         .execute()
     )
+
+def bulk_insert_profile_into_supabase(date_str_list, profile_list):
+    supabase = create_supabase_client()
+
+    n = len(date_str_list)
+    assert n == len(profile_list)
+
+    old_account_ids = set()
+    old_color_ids = set()
+
+    upsert_accounts_json_list = []
+    upsert_colors_json_list = []
+    insert_profiles_json_list = []
+
+    for date_str, profile in zip(date_str_list, profile_list):
+        get = lambda kp: get_and_warn_if_not_exists(profile, kp)
+        account_id = get("accountID")
+        
+        # Update User ID (Player ID)
+        if account_id not in old_account_ids:
+            upsert_accounts_json_list.append(
+                {"id": account_id, "user_id": get("playerID")}
+            )
+            old_account_ids.add(account_id)
+
+        # Insert color if not exists.
+        primary_color_id = get("col1")
+        if (
+            primary_color_id is not None
+            and primary_color_id not in old_color_ids
+        ):
+            upsert_colors_json_list.append({
+                "id": primary_color_id,
+                "red": get("col1RGB.r"),
+                "green": get("col1RGB.g"),
+                "blue": get("col1RGB.b"),
+            })
+            old_color_ids.add(primary_color_id)
+
+        secondary_color_id = get("col2")
+        if (
+            secondary_color_id is not None
+            and secondary_color_id not in old_color_ids
+        ):
+            upsert_colors_json_list.append({
+                "id": secondary_color_id,
+                "red": get("col2RGB.r"),
+                "green": get("col2RGB.g"),
+                "blue": get("col2RGB.b"),
+            })
+            old_color_ids.add(secondary_color_id)
+
+        glow_color_id = get("colG")
+        if (
+            glow_color_id is not None
+            and glow_color_id not in old_color_ids
+        ):
+            upsert_colors_json_list.append({
+                "id": glow_color_id,
+                "red": get("colGRGB.r"),
+                "green": get("colGRGB.g"),
+                "blue": get("colGRGB.b"),
+            })
+            old_color_ids.add(glow_color_id)
+
+        # Insert profiles
+        insert_profiles_json_list.append({
+            "date": date_str,
+            "account_id": account_id,
+            "username":
+                get("username"),
+            "global_rank":
+                get("rank"),
+            "stars":
+                get("stars"),
+            "moons":
+                get("moons"),
+            "diamonds":
+                get("diamonds"),
+            "secret_coins":
+                get("coins"),
+            "user_coins":
+                get("userCoins"),
+            "demons":
+                get("demons"),
+            "creator_points":
+                get("cp"),
+            "completed_classic_auto_levels":
+                get("classicLevelsCompleted.auto"),
+            "completed_classic_easy_levels":
+                get("classicLevelsCompleted.easy"),
+            "completed_classic_normal_levels":
+                get("classicLevelsCompleted.normal"),
+            "completed_classic_hard_levels":
+                get("classicLevelsCompleted.hard"),
+            "completed_classic_harder_levels":
+                get("classicLevelsCompleted.harder"),
+            "completed_classic_insane_levels":
+                get("classicLevelsCompleted.insane"),
+            "completed_classic_daily_levels":
+                get("classicLevelsCompleted.daily"),
+            "completed_classic_gauntlet_levels":
+                get("classicLevelsCompleted.gauntlet"),
+            "completed_platformer_auto_levels":
+                get("platformerLevelsCompleted.auto"),
+            "completed_platformer_easy_levels":
+                get("platformerLevelsCompleted.easy"),
+            "completed_platformer_normal_levels":
+                get("platformerLevelsCompleted.normal"),
+            "completed_platformer_hard_levels":
+                get("platformerLevelsCompleted.hard"),
+            "completed_platformer_harder_levels":
+                get("platformerLevelsCompleted.harder"),
+            "completed_platformer_insane_levels":
+                get("platformerLevelsCompleted.insane"),
+            "completed_platformer_daily_levels":
+                get("platformerLevelsCompleted.daily"),
+            "completed_classic_easy_demons":
+                get("classicDemonsCompleted.easy"),
+            "completed_classic_medium_demons":
+                get("classicDemonsCompleted.medium"),
+            "completed_classic_hard_demons":
+                get("classicDemonsCompleted.hard"),
+            "completed_classic_insane_demons":
+                get("classicDemonsCompleted.insane"),
+            "completed_classic_extreme_demons":
+                get("classicDemonsCompleted.extreme"),
+            "completed_classic_weekly_demons":
+                get("classicDemonsCompleted.weekly"),
+            "completed_classic_gauntlet_demons":
+                get("classicDemonsCompleted.gauntlet"),
+            "completed_platformer_easy_demons":
+                get("platformerDemonsCompleted.easy"),
+            "completed_platformer_medium_demons":
+                get("platformerDemonsCompleted.medium"),
+            "completed_platformer_hard_demons":
+                get("platformerDemonsCompleted.hard"),
+            "completed_platformer_insane_demons":
+                get("platformerDemonsCompleted.insane"),
+            "completed_platformer_extreme_demons":
+                get("platformerDemonsCompleted.extreme"),
+            "cube_id":
+                get("icon"),
+            "ship_id":
+                get("ship"),
+            "ball_id":
+                get("ball"),
+            "ufo_id":
+                get("ufo"),
+            "wave_id":
+                get("wave"),
+            "robot_id":
+                get("robot"),
+            "spider_id":
+                get("spider"),
+            "swing_id":
+                get("swing"),
+            "jetpack_id":
+                get("jetpack"),
+            "primary_color_id": primary_color_id,
+            "secondary_color_id": secondary_color_id,
+            "glow":
+                get("glow"),
+            "glow_color_id": glow_color_id,
+            "death_effect_id":
+                get("deathEffect"),
+            "friend_request_permission":
+                get("friendRequests"),
+            "message_permission":
+                get("messages"),
+            "moderator_level":
+                get("moderator"),
+            "youtube_id":
+                get("youtube"),
+            "twitter_id":
+                get("twitter"),
+            "twitch_id":
+                get("twitch"),
+        })
+    
+    if len(upsert_accounts_json_list) > 0:
+        (
+            supabase.table("accounts")
+            .upsert(upsert_accounts_json_list)
+            .execute()
+        )
+
+    if len(upsert_colors_json_list) > 0:
+        (
+            supabase.table("colors")
+            .upsert(upsert_colors_json_list)
+            .execute()
+        )
+
+    (
+        supabase.table("profiles")
+        .insert(insert_profiles_json_list)
+        .execute()
+    )
+    
