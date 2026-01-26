@@ -118,8 +118,35 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
             )
             old_account_ids.add(account_id)
 
+        # Handle cube_id and color attributes (there are two scenario)
+        icon_value = get("icon")
+        if isinstance(icon_value, dict):
+            print(f"Warning: rare profile structure, possibly hacker?")
+            """
+            Data example:
+            "icon": {
+                "icon": 1,
+                "col1": 1,
+                "col2": 1,
+                "colG": 0,
+                "glow": false
+            },
+            """
+
+            cube_id = get("icon.icon")
+            primary_color_id = get("icon.col1")
+            secondary_color_id = get("icon.col2")
+            glow_color_id = get("icon.colG")
+            glow = get("icon.glow")
+
+        else:
+            cube_id = icon_value
+            primary_color_id = get("col1")
+            secondary_color_id = get("col2")
+            glow_color_id = get("colG")
+            glow = get("glow")
+
         # Insert color if not exists.
-        primary_color_id = get("col1")
         if (
             primary_color_id is not None
             and primary_color_id not in old_color_ids
@@ -132,7 +159,6 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
             })
             old_color_ids.add(primary_color_id)
 
-        secondary_color_id = get("col2")
         if (
             secondary_color_id is not None
             and secondary_color_id not in old_color_ids
@@ -145,7 +171,6 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
             })
             old_color_ids.add(secondary_color_id)
 
-        glow_color_id = get("colG")
         if (
             glow_color_id is not None
             and glow_color_id not in old_color_ids
@@ -234,8 +259,7 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
                 get("platformerDemonsCompleted.insane"),
             "completed_platformer_extreme_demons":
                 get("platformerDemonsCompleted.extreme"),
-            "cube_id":
-                get("icon"),
+            "cube_id": cube_id,
             "ship_id":
                 get("ship"),
             "ball_id":
@@ -254,8 +278,7 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
                 get("jetpack"),
             "primary_color_id": primary_color_id,
             "secondary_color_id": secondary_color_id,
-            "glow":
-                get("glow"),
+            "glow": glow,
             "glow_color_id": glow_color_id,
             "death_effect_id":
                 get("deathEffect"),
