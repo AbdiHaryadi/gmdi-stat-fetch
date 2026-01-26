@@ -7,7 +7,7 @@ from utils import (
     create_supabase_client,
     fetch_profile_from_gdbrowser_colon,
     insert_profile_into_supabase,
-    iter_current_registered_account_ids
+    iter_fetchable_account_ids
 )
 
 def iter_current_registered_account_ids_without_profiles(date_str: str):
@@ -37,7 +37,7 @@ def iter_current_registered_account_ids_without_profiles(date_str: str):
         else:
             stop = True
 
-    for account_id in iter_current_registered_account_ids():
+    for account_id in iter_fetchable_account_ids():
         if account_id in existing_account_ids:
             continue
 

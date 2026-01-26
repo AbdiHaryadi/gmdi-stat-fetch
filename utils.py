@@ -13,7 +13,7 @@ def create_supabase_client():
     )
     return supabase
 
-def iter_current_registered_account_ids():
+def iter_fetchable_account_ids():
     supabase: Client = create_supabase_client()
 
     max_records_per_page = 1000
@@ -21,9 +21,8 @@ def iter_current_registered_account_ids():
     stop = False
     while not stop:
         response = (
-            supabase.table("registered_accounts")
+            supabase.table("fetchable_accounts")
             .select("id")
-            .is_("unregistered_at", "null")
             .range(first_index, first_index + max_records_per_page - 1)
             .execute()
         )
