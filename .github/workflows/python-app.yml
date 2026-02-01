@@ -27,3 +27,8 @@ jobs:
         SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       run: |
         python fetch.py
+    - name: Update leaderboard
+      env:
+        FRONTEND_HOOK_URL: ${{ secrets.FRONTEND_HOOK_URL }}
+      run: |
+        python update.py

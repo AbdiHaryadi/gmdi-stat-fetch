@@ -294,6 +294,12 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
                 get("twitter"),
             "twitch_id":
                 get("twitch"),
+            "discord_id":
+                get("discord"),
+            "instagram_id":
+                get("instagram"),
+            "tiktok_id":
+                get("tiktok"),
         })
     
     if len(upsert_accounts_json_list) > 0:
