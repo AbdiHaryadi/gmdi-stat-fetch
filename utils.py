@@ -8,8 +8,8 @@ from supabase import Client, create_client
 def create_supabase_client():
     load_dotenv()
     supabase: Client = create_client(
-        supabase_url=os.getenv("SUPABASE_URL"),
-        supabase_key=os.getenv("SUPABASE_KEY"),
+        supabase_url=str(os.getenv("SUPABASE_URL")),
+        supabase_key=str(os.getenv("SUPABASE_KEY")),
     )
     return supabase
 
@@ -40,7 +40,12 @@ def iter_fetchable_account_ids():
 def fetch_profile_from_gdbrowser_colon(account_id):
     req = request_get_until_not_error(f"https://gdbrowser.com/api/profile/{account_id}")
     result = req.text
-    result = json.loads(result)
+    try:
+        result = json.loads(result)
+    except json.JSONDecodeError as e:
+        print("Unexpected result:")
+        print(result)
+        raise e
     assert isinstance(result, dict)
     return result
 
