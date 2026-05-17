@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from zoneinfo import ZoneInfo
 
 from tqdm import tqdm
@@ -53,5 +54,6 @@ for account_id in (pbar := tqdm(account_id_list)):
     pbar.set_description(f"Processing {account_id}")
     profile = fetch_profile_from_gdbrowser_colon(account_id)
     insert_profile_into_supabase(date_str, profile)
+    time.sleep(1)
 
 print("Done!")
