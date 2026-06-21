@@ -6,12 +6,13 @@ from tqdm import tqdm
 
 from utils import (
     create_supabase_client,
-    fetch_profile_from_gdbrowser_colon,
+    fetch_profile_from_gdbrowser_colon_with_account_id,
+    fetch_profile_from_gdbrowser_colon_with_player_id,
     insert_profile_into_supabase,
-    iter_fetchable_account_ids
+    iter_fetchable_account_ids_and_user_ids
 )
 
-def iter_current_registered_account_ids_without_profiles(date_str: str):
+def iter_current_registered_account_ids_and_user_ids_without_profiles(date_str: str):
     supabase = create_supabase_client()
 
     max_records_per_page = 1000
@@ -38,22 +39,30 @@ def iter_current_registered_account_ids_without_profiles(date_str: str):
         else:
             stop = True
 
-    for account_id in iter_fetchable_account_ids():
+    for account_id, user_id in iter_fetchable_account_ids_and_user_ids():
         if account_id in existing_account_ids:
             continue
 
-        yield account_id
+        yield account_id, user_id
 
 supabase = create_supabase_client()
 
 date_str = str(datetime.now(ZoneInfo("Asia/Jakarta")).date())
-account_id_list = [x for x in iter_current_registered_account_ids_without_profiles(date_str)]
-print(f"Total:", len(account_id_list))
+account_user_id_tuple_list = [x for x in iter_current_registered_account_ids_and_user_ids_without_profiles(date_str)]
+print(f"Total:", len(account_user_id_tuple_list))
 
-for account_id in (pbar := tqdm(account_id_list)):
+for account_id, user_id in (pbar := tqdm(account_user_id_tuple_list)):
     pbar.set_description(f"Processing {account_id}")
-    profile = fetch_profile_from_gdbrowser_colon(account_id)
-    insert_profile_into_supabase(date_str, profile)
+    profile = fetch_profile_from_gdbrowser_colon_with_account_id(account_id)
+    if int(profile["accountID"]) != account_id and user_id is not None:
+        player_id = user_id
+        profile = fetch_profile_from_gdbrowser_colon_with_player_id(player_id)
+
+    if int(profile["accountID"]) != account_id:
+        print(f"Warning: {account_id} is skipped because the profile has different account_id.")
+    else:
+        insert_profile_into_supabase(date_str, profile)
+    
     time.sleep(1)
 
 print("Done!")

@@ -14,6 +14,9 @@ def create_supabase_client():
     return supabase
 
 def iter_fetchable_account_ids():
+    """
+    DEPRECATED: use iter_fetchable_account_ids_and_user_ids instead!
+    """
     supabase: Client = create_supabase_client()
 
     max_records_per_page = 1000
@@ -37,8 +40,44 @@ def iter_fetchable_account_ids():
         else:
             stop = True
 
-def fetch_profile_from_gdbrowser_colon(account_id):
+def iter_fetchable_account_ids_and_user_ids():
+    supabase: Client = create_supabase_client()
+
+    max_records_per_page = 1000
+    first_index = 0
+    stop = False
+    while not stop:
+        response = (
+            supabase.table("fetchable_accounts")
+            .select("id", "user_id")
+            .range(first_index, first_index + max_records_per_page - 1)
+            .execute()
+        )
+        for x in response.data:
+            if not isinstance(x, dict):
+                raise ValueError("Something is wrong with Supabase (registered_accounts)")
+            
+            yield x["id"], x["user_id"]
+
+        if len(response.data) == max_records_per_page:
+            first_index += max_records_per_page
+        else:
+            stop = True
+
+def fetch_profile_from_gdbrowser_colon_with_account_id(account_id):
     req = request_get_until_not_error(f"https://gdbrowser.com/api/profile/{account_id}")
+    result = req.text
+    try:
+        result = json.loads(result)
+    except json.JSONDecodeError as e:
+        print("Unexpected result:")
+        print(result)
+        raise e
+    assert isinstance(result, dict)
+    return result
+
+def fetch_profile_from_gdbrowser_colon_with_player_id(player_id):
+    req = request_get_until_not_error(f"https://gdbrowser.com/api/profile/{player_id}?player=true")
     result = req.text
     try:
         result = json.loads(result)
