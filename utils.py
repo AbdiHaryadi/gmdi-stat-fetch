@@ -50,6 +50,7 @@ def iter_fetchable_account_ids_and_user_ids():
         response = (
             supabase.table("fetchable_accounts")
             .select("id", "user_id")
+            .order("id")
             .range(first_index, first_index + max_records_per_page - 1)
             .execute()
         )

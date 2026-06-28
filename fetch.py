@@ -25,6 +25,7 @@ def iter_current_registered_account_ids_and_user_ids_without_profiles(date_str: 
             supabase.table("profiles")
             .select("account_id")
             .eq("date", date_str)
+            .order("account_id")
             .range(first_index, first_index + max_records_per_page - 1)
             .execute()
         )
