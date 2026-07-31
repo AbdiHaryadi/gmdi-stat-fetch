@@ -9,7 +9,7 @@ from utils import (
     fetch_profile_from_gdbrowser_colon_with_account_id,
     fetch_profile_from_gdbrowser_colon_with_player_id,
     insert_profile_into_supabase,
-    iter_fetchable_account_ids_and_user_ids
+    iter_fetchable_account_ids_and_player_ids
 )
 
 def iter_current_registered_account_ids_and_user_ids_without_profiles(date_str: str):
@@ -40,7 +40,7 @@ def iter_current_registered_account_ids_and_user_ids_without_profiles(date_str: 
         else:
             stop = True
 
-    for account_id, user_id in iter_fetchable_account_ids_and_user_ids():
+    for account_id, user_id in iter_fetchable_account_ids_and_player_ids():
         if account_id in existing_account_ids:
             continue
 

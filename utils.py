@@ -40,7 +40,7 @@ def iter_fetchable_account_ids():
         else:
             stop = True
 
-def iter_fetchable_account_ids_and_user_ids():
+def iter_fetchable_account_ids_and_player_ids():
     supabase: Client = create_supabase_client()
 
     max_records_per_page = 1000
@@ -48,8 +48,9 @@ def iter_fetchable_account_ids_and_user_ids():
     stop = False
     while not stop:
         response = (
-            supabase.table("fetchable_accounts")
-            .select("id", "user_id")
+            supabase.table("accounts")
+            .select("id", "player_id")
+            .eq("ignored", False)
             .order("id")
             .range(first_index, first_index + max_records_per_page - 1)
             .execute()
@@ -58,7 +59,7 @@ def iter_fetchable_account_ids_and_user_ids():
             if not isinstance(x, dict):
                 raise ValueError("Something is wrong with Supabase (registered_accounts)")
             
-            yield x["id"], x["user_id"]
+            yield x["id"], x["player_id"]
 
         if len(response.data) == max_records_per_page:
             first_index += max_records_per_page
@@ -159,7 +160,7 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
         # Update User ID (Player ID)
         if account_id not in old_account_ids:
             upsert_accounts_json_list.append(
-                {"id": account_id, "user_id": get("playerID")}
+                {"id": account_id, "player_id": get("playerID")}
             )
             old_account_ids.add(account_id)
 
@@ -220,13 +221,14 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
             glow_color_id is not None
             and glow_color_id not in old_color_ids
         ):
-            upsert_colors_json_list.append({
-                "id": glow_color_id,
-                "red": get("colGRGB.r"),
-                "green": get("colGRGB.g"),
-                "blue": get("colGRGB.b"),
-            })
-            old_color_ids.add(glow_color_id)
+            if get("colGRGB") is not None:
+                upsert_colors_json_list.append({
+                    "id": glow_color_id,
+                    "red": get("colGRGB.r"),
+                    "green": get("colGRGB.g"),
+                    "blue": get("colGRGB.b"),
+                })
+                old_color_ids.add(glow_color_id)
 
         # Insert profiles
         insert_profiles_json_list.append({
