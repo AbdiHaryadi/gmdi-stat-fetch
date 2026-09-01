@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from utils import (
     create_supabase_client,
+    fetch_all_records,
     fetch_profile_from_gdbrowser_colon_with_account_id,
     fetch_profile_from_gdbrowser_colon_with_player_id,
     insert_profile_into_supabase,
@@ -13,32 +14,14 @@ from utils import (
 )
 
 def iter_current_registered_account_ids_and_player_ids_without_profiles(date_str: str):
-    supabase = create_supabase_client()
-
-    max_records_per_page = 1000
-    first_index = 0
-    stop = False
-
     existing_account_ids = set()
-    while not stop:
-        response = (
-            supabase.table("profiles")
-            .select("account_id")
-            .eq("date", date_str)
-            .order("account_id")
-            .range(first_index, first_index + max_records_per_page - 1)
-            .execute()
-        )
-        for x in response.data:
-            if not isinstance(x, dict):
-                raise ValueError("Something is wrong with Supabase (registered_accounts)")
-            
-            existing_account_ids.add(x["account_id"])
-
-        if len(response.data) == max_records_per_page:
-            first_index += max_records_per_page
-        else:
-            stop = True
+    for x in fetch_all_records(
+        create_supabase_client().table("profiles")
+        .select("account_id")
+        .eq("date", date_str)
+        .order("account_id")
+    ):
+        existing_account_ids.add(x["account_id"])
 
     for account_id, player_id in iter_fetchable_account_ids_and_player_ids():
         if account_id in existing_account_ids:

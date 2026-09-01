@@ -13,19 +13,18 @@ def create_supabase_client():
     )
     return supabase
 
-def iter_fetchable_account_ids():
+def fetch_all_records(supabase_query_builder):
     """
-    DEPRECATED: use iter_fetchable_account_ids_and_user_ids instead!
+    To make the result more deterministic,
+    involve sorting in the query.
     """
-    supabase: Client = create_supabase_client()
 
     max_records_per_page = 1000
     first_index = 0
     stop = False
     while not stop:
         response = (
-            supabase.table("fetchable_accounts")
-            .select("id")
+            supabase_query_builder
             .range(first_index, first_index + max_records_per_page - 1)
             .execute()
         )
@@ -33,7 +32,7 @@ def iter_fetchable_account_ids():
             if not isinstance(x, dict):
                 raise ValueError("Something is wrong with Supabase (registered_accounts)")
             
-            yield x["id"]
+            yield x
 
         if len(response.data) == max_records_per_page:
             first_index += max_records_per_page
@@ -41,30 +40,13 @@ def iter_fetchable_account_ids():
             stop = True
 
 def iter_fetchable_account_ids_and_player_ids():
-    supabase: Client = create_supabase_client()
-
-    max_records_per_page = 1000
-    first_index = 0
-    stop = False
-    while not stop:
-        response = (
-            supabase.table("accounts")
-            .select("id", "player_id")
-            .eq("ignored", False)
-            .order("id")
-            .range(first_index, first_index + max_records_per_page - 1)
-            .execute()
-        )
-        for x in response.data:
-            if not isinstance(x, dict):
-                raise ValueError("Something is wrong with Supabase (registered_accounts)")
-            
-            yield x["id"], x["player_id"]
-
-        if len(response.data) == max_records_per_page:
-            first_index += max_records_per_page
-        else:
-            stop = True
+    for x in fetch_all_records(
+        create_supabase_client().table("accounts")
+        .select("id", "player_id")
+        .eq("ignored", False)
+        .order("id")
+    ):
+        yield x["id"], x["player_id"]
 
 def fetch_profile_from_gdbrowser_colon_with_account_id(account_id):
     req = request_get_until_not_error(f"https://gdbrowser.com/api/profile/{account_id}")
