@@ -311,7 +311,9 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
             "glow_color_id": glow_color_id,
             "death_effect_id":
                 get("deathEffect"),
-            "friend_request_permission":
+            # "friend_request_permission":
+            #     get("friendRequests"),
+            "friend_request_permission_v2":
                 get("friendRequests"),
             "message_permission":
                 get("messages"),
@@ -329,6 +331,12 @@ def bulk_insert_profile_into_supabase(date_str_list, profile_list):
                 get("instagram"),
             "tiktok_id":
                 get("tiktok"),
+            "followers":
+                get("followers"),
+            "group_invite_permission":
+                get("groupInvites"),
+            "comment_history_permission":
+                get("commentHistory"),
         })
     
     if len(upsert_accounts_json_list) > 0:
